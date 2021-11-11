@@ -1,10 +1,10 @@
 echo '
 nameserver 192.168.122.1
-' > etc/resolv.conf
+' > /etc/resolv.conf
 
 apt-get update
-apt-get install nano
-apt-get install isc-dhcp-server
+apt-get install nano -y
+apt-get install isc-dhcp-server -y
 
 echo 'INTERFACE="eth0"' > /etc/default/isc-dhcp-server
 

@@ -1,7 +1,7 @@
 iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE -s 10.16.0.0/16
 apt-get update
-apt-get install nano
-apt-get install isc-dhcp-relay
+apt-get install nano -y
+apt-get install isc-dhcp-relay -y
 
 echo '
 # Defaults for isc-dhcp-relay initscript

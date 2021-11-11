@@ -7,7 +7,7 @@ apt-get install wget -y
 apt-get install unzip -y
 
 wget https://raw.githubusercontent.com/FeinardSlim/Praktikum-Modul-2-Jarkom/main/super.franky.zip
-unzip /root/Praktikum-Modul-2-Jarkom-main/super.franky.zip -d /root/Praktikum-Modul-2-Jarkom-main
+unzip /root/super.franky.zip -d /root
 
 cp /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-available/super.franky.c04.com.conf
 
@@ -32,15 +32,6 @@ echo '
         </Directory>
         ErrorDocument 404 /error/404.html
         
-        Alias "/js" "/var/www/super.franky.c04.com/public/js"
-        
-        <Directory /var/www/super.franky.c04.com/public/*>
-            Options -Indexes
-        </Directory>
-        
-        <Directory /var/www/super.franky.c04.com/public/images>
-            Options +Indexes
-        </Directory>
         # Available loglevels: trace8, ..., trace1, debug, info, notice, warn,
         # error, crit, alert, emerg.
         # It is also possible to configure the loglevel for particular
@@ -61,8 +52,12 @@ echo '
 
 mkdir /var/www/super.franky.c04.com
 
-cp -r /root/Praktikum-Modul-2-Jarkom-main/super.franky/error /var/www/super.franky.c04.com
-cp -r /root/Praktikum-Modul-2-Jarkom-main/super.franky/public /var/www/super.franky.c04.com
+cp -r /root/super.franky/error /var/www/super.franky.c04.com
+cp -r /root/super.franky/public /var/www/super.franky.c04.com
+
+echo '
+ServerName 10.16.3.69
+' >> /etc/apache2/apache2.conf
 
 a2ensite super.franky.c04.com
 service apache2 restart
