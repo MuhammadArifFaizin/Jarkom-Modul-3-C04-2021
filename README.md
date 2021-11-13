@@ -38,6 +38,19 @@ Bisa melakukan wget https://raw.githubusercontent.com/FeinardSlim/Praktikum-Modu
 ## Jawaban
 
 ## Soal 1
+Pada soal ini diminta untuk ndoe EniesLobby sebagai DNS Server, Jipangu sebagai DHCP Server, dan Water7 sebagai proxy server. Maka pada EniesLobby di install `bind9`, Jipangu di install `isc-dhcp-server` dan pada Water7 di install `squid`. Kemudian untuk setting awal DNS maka tuliskan sebagai berikut pada `/etc/bind/named.conf.options` agar pada nantinya node yang merujuk ke EniesLobby dapat mengakses Internet.
+
+```bash
+options {
+        directory "/var/cache/bind";
+        forwarders {
+                    192.168.122.1;
+            };
+        allow-query{any;};
+        auth-nxdomain no;    # conform to RFC1035
+        listen-on-v6 { any; };
+    };
+```
 
 ## Soal 2
 Pada soal ini diminta agar node `Foosha` menjadi dhcp relay, agar node tersebut bisa menjadi relay maka pertama yang dilakukan adalah menginstall `isc-dhcp-relay` pada node tersebut
