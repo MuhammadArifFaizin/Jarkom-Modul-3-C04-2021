@@ -33,7 +33,7 @@ http_reply_access deny BLACKLIST
 
 htpasswd -cm /etc/squid/passwd luffybelikapalc04
 
-htpasswd -m /etc/squid/passwd zorobelikapalc04
+htpasswd -cm /etc/squid/passwd zorobelikapalc04
 
 echo '
     acl AVAILABLE_WORKING time MTWH 07:00-11:00

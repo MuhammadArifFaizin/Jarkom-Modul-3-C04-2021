@@ -106,13 +106,174 @@ Kemudian merestart node Skypie dan apabila benar maka akan terlihat hasil sepert
 ![Skypie](/img/Skypie.png)
 
 ## Soal 8
+Pada soal ini, diminta untuk membuat proxy dengan nama `jualbelikapal.c04.com` dan port `5000` pada client Loguetown.
 
+Untuk itu, langkah yang perlu dilakukan adalah membuat file `squid.conf` pada `/etc/squid/` pada node Water7, kemudian diisi sebagai berikut 
+
+```bash
+http_port 5000
+visible_hostname jualbelikapal.c04.com
+
+http_access allow all
+```
+
+Kemudian jalankan line berikut pada Loguetown untuk mengaktifkan proxy
+```bash
+export http_proxy="http://10.16.2.3:5000" 
+```
+
+Lalu apabila ingin menonaktifkan proxy maka jalankan line berikut
+```bash
+unset http_proxy
+```
+
+![8.1](/img/8.1.png)
 ## Soal 9
+Diminta untuk menambahkan autentikasi ketika mengakses proxy, dan membuat 2 akun
+* luffybelikapalc04     pass : luffy_c04
+* zorobelikapalc04      pass : zoro_c04
 
+Oleh karena itu, yang dilakukan adalah menjalankan perintah berikut untuk masing-masing akun
+* `htpasswd -cm /etc/squid/passwd luffybelikapalc04` untuk membuat akun luffybelikapalc04 dan memasukkan password `luffy_c04` dimana parameter `-c` untuk membuat file `passwdfile` dan parameter `-m` untuk mengenkripsi password menggunakan MD5
+* `htpasswd -cm /etc/squid/passwd zorobelikapalc04` untuk membuat akun zorobelikapalc04 dan memasukkan password `zoro_c04` dimana parameter `-c` untuk membuat file `passwdfile` dan parameter `-m` untuk mengenkripsi password menggunakan MD5
+![9.1](/img/9.1.png)
+
+Kemudian melakukan update pada file `/etc/squid/squid.conf` menjadi berikut
+```bash
+http_port 5000
+visible_hostname jualbelikapal.c04.com
+
+auth_param basic program /usr/lib/squid/basic_ncsa_auth /etc/squid/passwd
+auth_param basic children 5
+auth_param basic realm Login
+auth_param basic credentialsttl 2 hours
+auth_param basic casesensitive on
+http_access deny all
+```
+
+Kemudian untuk mengetes apakah sudah menggunakan autentikasi atau tidak dapat menggunakan `lynx` ke semua halaman dalam proxy, hasilnya sebagai berikut
+![9.2](/img/9.2.png)
 ## Soal 10
+Diminta untuk membatasi waktu akses client atau lebih tepatnya Loguetown dalam mengakses proxy, dengan ketentuan waktu sebagai berikut 
+* Senin-Kamis pukul 07.00 - 11.00
+* Selasa-Jum'at pukul 17.00 - 03.00 (Sabtu pukul 03.00)
 
+Untuk membatasi akses proxy, maka perlu membuat sebuah file `acl.conf` di `/etc/squid/` dengan isi sebagai berikut
+```bash
+    acl AVAILABLE_WORKING time MTWH 07:00-11:00
+    acl AVAILABLE_WORKING time TWHF 17:00-23:59
+    acl AVAILABLE_WORKING time WHFA 00:00-03:00
+```
+
+Kemudian file tersebut di include ke dalam `/etc/squid/squid.conf` sehingga isinya sebagai berikut
+```bash
+include /etc/squid/acl.conf
+
+http_port 5000
+visible_hostname jualbelikapal.c04.com
+
+auth_param basic program /usr/lib/squid/basic_ncsa_auth /etc/squid/passwd
+auth_param basic children 5
+auth_param basic realm Login
+auth_param basic credentialsttl 2 hours
+auth_param basic casesensitive on
+http_access allow USERS AVAILABLE_WORKING
+http_access deny all
+```
+
+Kemudian, ubah waktu menggunakan command `date -s "10 NOV 2021 08:00:00"` pada Loguetown, maka resource akan dapat diakses
+![10.1](/img/10.1.png)
+
+Namun ketika menggunakan command `date -s "08 NOV 2021 18:00:00"` pada Loguetown, maka ketika diakses akan menampilkan pesan `403 Forbidden`
+![10.2](/img/10.2.png)
 ## Soal 11
+Diminta untuk memblokir akses ke google.com dan dialihkan ke super.franky.c04.com yang sama yang telah dibuat di Praktikum Modul 2
 
+Untuk membatasi akses ke google.com dan mengalihkannya ke super.franky.c04.com, maka pada `.etc/squid/squid.conf` sehingga menjadi
+```bash
+include /etc/squid/acl.conf
+
+http_port 5000
+visible_hostname jualbelikapal.c04.com
+
+auth_param basic program /usr/lib/squid/basic_ncsa_auth /etc/squid/passwd
+auth_param basic children 5
+auth_param basic realm Login
+auth_param basic credentialsttl 2 hours
+auth_param basic casesensitive on
+http_access allow USERS AVAILABLE_WORKING
+http_access deny all
+
+acl BLACKLIST dstdomain google.com
+deny_info http://super.franky.c04.com/ BLACKLIST
+http_reply_access deny BLACKLIST
+```
+
+Ketika mengakses google.com menggunakan `lynx`, maka otomatis akan dialihkan ke `super.franky.c04.com`.
+![11.1](/img/11.1.png)
 ## Soal 12
+Diminta untuk membatasi akses melihat dan mendownload dengan kecepatan 10kbps ketika menggunakan akun luffybelikapalc04
 
+Untuk membatasi aksesnya, makan perlu untuk membuat file `acl-bandwith.conf` dengan isi sebagai berikut
+```bash
+    acl download url_regex -i \.jpg$ \.png$
+    auth_param basic program /usr/lib/squid/basic_ncsa_auth /etc/squid/passwd
+    acl luffy proxy_auth luffybelikapalc04
+    acl zoro proxy_auth zorobelikapalc04
+
+    delay_pools 1
+    delay_class 1 1
+    delay_parameters 1 10000/10000
+    delay_access 1 deny zoro
+    delay_access 1 allow download
+    delay_access 1 deny all
+```
+
+Lalu update isi dari `/etc/squid/squid.conf` menjadi seperti berikut
+```bash
+include /etc/squid/acl.conf
+include /etc/squid/acl-bandwith.conf
+
+http_port 5000
+visible_hostname jualbelikapal.c04.com
+
+auth_param basic program /usr/lib/squid/basic_ncsa_auth /etc/squid/passwd
+auth_param basic children 5
+auth_param basic realm Login
+auth_param basic credentialsttl 2 hours
+auth_param basic casesensitive on
+acl USERS proxy_auth REQUIRED
+http_access allow USERS AVAILABLE_WORKING
+http_access deny all
+
+acl BLACKLIST dstdomain google.com
+deny_info http://super.franky.c04.com/ BLACKLIST
+http_reply_access deny BLACKLIST
+```
+
+Kemudian buka salah satu image yang cukup besar menggunakan `lynx`, maka hasilnya akan seperti berikut
+![12.1](/img/12.1.png)
 ## Soal 13
+Diminta untuk menghilangkan batas kecepatan melihat dan mendownload ketika menggunakan akun zorobelikapalc04.
+
+Untuk menghilangkan batas tersebut, maka update file `/etc/squid/acl-bandwith.conf` menjadi seperti berikut
+```bash
+    acl download url_regex -i \.jpg$ \.png$
+    auth_param basic program /usr/lib/squid/basic_ncsa_auth /etc/squid/passwd
+    acl luffy proxy_auth luffybelikapalc04
+    acl zoro proxy_auth zorobelikapalc04
+
+    delay_pools 2
+    delay_class 1 1
+    delay_parameters 1 10000/10000
+    delay_access 1 deny zoro
+    delay_access 1 allow download
+    delay_access 1 deny all
+
+    delay_class 2 1
+    delay_parameters 2 none
+    delay_access 2 allow !luffy
+```
+
+Kemudian buka salah satu image yang cukup besar menggunakan `lynx`, maka hasilnya akan seperti berikut
+![13.1](/img/13.1.png)
